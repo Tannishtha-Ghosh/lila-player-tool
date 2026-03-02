@@ -17,7 +17,8 @@ function App() {
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
 
-  const API_BASE = "http://127.0.0.1:8000";
+  // 🔥 LIVE BACKEND
+  const API_BASE = "https://lila-player-tool-backend.onrender.com";
 
   // Load matches
   useEffect(() => {
@@ -26,9 +27,10 @@ function App() {
       .catch(err => console.error(err));
   }, []);
 
-  // Load match
+  // Load selected match
   const loadMatch = (matchId) => {
     setSelectedMatch(matchId);
+
     axios.get(`${API_BASE}/match/${matchId}`)
       .then(res => {
         setMatchData(res.data);
@@ -38,7 +40,7 @@ function App() {
       .catch(err => console.error(err));
   };
 
-  // Autoplay logic
+  // Autoplay
   useEffect(() => {
     if (!isPlaying || !matchData) return;
 
@@ -55,7 +57,7 @@ function App() {
     return () => clearInterval(animationRef.current);
   }, [isPlaying, matchData]);
 
-  // Drawing
+  // Drawing logic
   useEffect(() => {
     if (!matchData) return;
 
@@ -70,7 +72,7 @@ function App() {
       ctx.clearRect(0, 0, 1024, 1024);
       ctx.drawImage(img, 0, 0, 1024, 1024);
 
-      // Heatmap
+      // 🔥 Heatmap
       if (showHeatmap) {
         matchData.players.forEach(player => {
           if (!showBots && player.is_bot) return;
@@ -79,14 +81,14 @@ function App() {
             if (event.type.includes("Position") && event.time <= currentTime) {
               const gradient = ctx.createRadialGradient(
                 event.x, event.y, 0,
-                event.x, event.y, 20
+                event.x, event.y, 25
               );
               gradient.addColorStop(0, "rgba(255,0,0,0.3)");
               gradient.addColorStop(1, "rgba(255,0,0,0)");
 
               ctx.fillStyle = gradient;
               ctx.beginPath();
-              ctx.arc(event.x, event.y, 20, 0, 2 * Math.PI);
+              ctx.arc(event.x, event.y, 25, 0, 2 * Math.PI);
               ctx.fill();
             }
           });
@@ -96,10 +98,10 @@ function App() {
       matchData.players.forEach(player => {
         if (!showBots && player.is_bot) return;
 
-        // Movement
+        // Movement paths
         if (showMovement) {
-          ctx.strokeStyle = player.is_bot ? "#888" : "#ffffff";
-          ctx.lineWidth = 1;
+          ctx.strokeStyle = player.is_bot ? "#888888" : "#ffffff";
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
 
           let started = false;
@@ -118,7 +120,7 @@ function App() {
           ctx.stroke();
         }
 
-        // Events
+        // Event markers
         if (showEvents) {
           player.events.forEach(event => {
             if (!event.type.includes("Position") && event.time <= currentTime) {
@@ -162,10 +164,11 @@ function App() {
         LILA Player Journey Tool
       </h1>
 
+      {/* Match Dropdown */}
       <select
         value={selectedMatch}
         onChange={(e) => loadMatch(e.target.value)}
-        style={{ padding: "8px", marginBottom: "20px", width: "400px" }}
+        style={{ padding: "8px", marginBottom: "20px", width: "420px" }}
       >
         <option value="">Select Match</option>
         {matches.map((match) => (
@@ -184,7 +187,7 @@ function App() {
           <div style={{ marginBottom: "15px" }}>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              style={{ marginRight: "10px", padding: "6px 12px" }}
+              style={{ marginRight: "10px", padding: "6px 14px" }}
             >
               {isPlaying ? "Pause" : "Play"}
             </button>
@@ -198,6 +201,7 @@ function App() {
               onChange={(e) => setCurrentTime(parseFloat(e.target.value))}
               style={{ width: "500px" }}
             />
+
             <span style={{ marginLeft: "10px" }}>
               {currentTime.toFixed(2)}s
             </span>
@@ -228,6 +232,7 @@ function App() {
             <span style={{ marginRight: "15px" }}>⚫ Bot Path</span>
             <span style={{ marginRight: "15px" }}>🔴 Kill</span>
             <span style={{ marginRight: "15px" }}>🟢 Loot</span>
+            <span style={{ marginRight: "15px" }}>⚫ Killed</span>
             <span style={{ marginRight: "15px" }}>🟣 Storm</span>
             <span>🔥 Heatmap</span>
           </div>
